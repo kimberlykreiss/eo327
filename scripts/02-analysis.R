@@ -122,9 +122,9 @@ monthly_hiring <- nj_final %>%
   group_by(START_DATE) %>% 
   summarise(hires_n = n()) %>% 
   ungroup() %>% 
-  mutate(START_DATE=as.Date(START_DATE)) %>% 
-  mutate(hires_n = if_else(START_DATE >= "2023-10-01", hires_n + 500, as.double(hires_n)),
-         hires_n = if_else(START_DATE == "2023-09-01", hires_n+2000, as.double(hires_n)))
+  mutate(START_DATE=as.Date(START_DATE)) #%>% 
+  # mutate(hires_n = if_else(START_DATE >= "2023-10-01", hires_n + 500, as.double(hires_n)),
+  #        hires_n = if_else(START_DATE == "2023-09-01", hires_n+2000, as.double(hires_n)))
  
 
 #### let's vizualize monthly hiring 
