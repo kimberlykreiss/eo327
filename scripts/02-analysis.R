@@ -114,7 +114,9 @@ nj_govt_experience <- nj_experience %>%
 monthly_hiring <- nj_final %>% 
   filter(COMPANY_NAME %in% nj_govt_experience$COMPANY_NAME) %>%
   group_by(START_DATE) %>% 
-  summarise(hires_n = n())
+  summarise(hires_n = n()) %>% 
+  ungroup() %>% 
+  mutate(START_DATE=as.Date(START_DATE))
  
 
 #### let's vizualize monthly hiring 
@@ -126,44 +128,30 @@ gg2 <- monthly_hiring %>%
   labs(x="", y ="") 
 gg2
 
-library(rdwd)
-library(tsibble)
-library(feasts)
-
-monthly_hiring_ts <- tsibble::as_tsibble(monthly_hiring, index = START_DATE) %>%
-  model(STL(hires_n ~ season(period = "year"), robust = TRUE)) |>
-  components() |>
-  autoplot()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 monthly_hiring_ts<- ts(monthly_hiring, frequency = 12, start = c(2022, 1))
-monthly_hiring_ts <- monthly_hiring_ts[,2]
+monthly_hiring_ts <- as.vector(monthly_hiring_ts[,2])
 
 plot.ts(monthly_hiring_ts)
-hiring_comp <- decompose(monthly_hiring_ts)
+# hiring_comp <- stl(monthly_hiring_ts, s.window = "periodic", robust=TRUE)
 
 plot(hiring_comp)
 
 hiringSeasonAdj <- monthly_hiring_ts - hiring_comp$seasonal
 plot.ts(hiringSeasonAdj)
+
+hiringSeasonAdj_df <- data.frame(year = seq(as.Date("2022-01-01"), as.Date("2023-12-31"), by = "month"), season_adj_hires = hiringSeasonAdj) %>% 
+  left_join(monthly_hiring, by = c("year"="START_DATE"))
+
+gg2 <- hiringSeasonAdj_df %>% 
+  pivot_longer(cols=c(season_adj_hires, hires_n), names_to = 'hires') %>%
+  ggplot(aes(x=year, y=value, group=hires, color=hires)) + 
+  geom_point() + 
+  geom_line() + 
+  ggthemes::theme_clean() + 
+  labs(x="", y ="") + 
+  geom_vline(xintercept = as.Date("2023-10-01"))
+gg2
+
+
+
+
