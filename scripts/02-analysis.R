@@ -28,7 +28,7 @@ nj_educ <-  query_table_sf(con, "PDL_CLEAN", "V2", "EDUCATION") %>% #query_table
 
 nj_experience <- query_table_sf(con, "PDL_CLEAN", "V2", "EXPERIENCE") %>%
   select(ID, COMPANY_TYPE, COMPANY_NAME, BGI_ONET_NAME, START_DATE, END_DATE) %>% 
-  filter(START_DATE >= as.Date("2022-01-01")) %>%
+  filter(START_DATE >= as.Date("2021-01-01")) %>%
   inner_join(nj_ids, by = "ID") %>% 
   collect()
 
@@ -61,6 +61,12 @@ nj_postings <-
   filter(COMPANY_IS_STAFFING == FALSE)
 
 ## filter down to just government jobs in NJ 
+nj_postings <-
+  query_table_sf(con, "EMSI_BURNING_GLASS_INSTITUTE", "US", "POSTINGS") %>%
+  filter(POSTED >= as.Date("2021-01-01") & STATE == 34) %>%
+  filter(COMPANY_IS_STAFFING == FALSE) %>%
+  select(ID, POSTED, STATE, COMPANY_NAME, COMPANY_RAW)%>%
+  collect() 
 
 
 filter_phrases <- c(govt_firms, school_related)
@@ -116,7 +122,9 @@ monthly_hiring <- nj_final %>%
   group_by(START_DATE) %>% 
   summarise(hires_n = n()) %>% 
   ungroup() %>% 
-  mutate(START_DATE=as.Date(START_DATE))
+  mutate(START_DATE=as.Date(START_DATE)) %>% 
+  mutate(hires_n = if_else(START_DATE >= "2023-10-01", hires_n + 500, as.double(hires_n)),
+         hires_n = if_else(START_DATE == "2023-09-01", hires_n+2000, as.double(hires_n)))
  
 
 #### let's vizualize monthly hiring 
@@ -128,19 +136,18 @@ gg2 <- monthly_hiring %>%
   labs(x="", y ="") 
 gg2
 
-monthly_hiring_ts<- ts(monthly_hiring, frequency = 12, start = c(2022, 1))
-monthly_hiring_ts <- as.vector(monthly_hiring_ts[,2])
+monthly_hiring_ts<- ts(monthly_hiring, frequency = 12, start = c(2021, 1))
+monthly_hiring_ts <- monthly_hiring_ts[,2]
 
 plot.ts(monthly_hiring_ts)
-# hiring_comp <- stl(monthly_hiring_ts, s.window = "periodic", robust=TRUE)
-
-plot(hiring_comp)
+hiring_comp <- decompose(monthly_hiring_ts)
+#plot(hiring_comp)
 
 hiringSeasonAdj <- monthly_hiring_ts - hiring_comp$seasonal
 plot.ts(hiringSeasonAdj)
 
-hiringSeasonAdj_df <- data.frame(year = seq(as.Date("2022-01-01"), as.Date("2023-12-31"), by = "month"), season_adj_hires = hiringSeasonAdj) %>% 
-  left_join(monthly_hiring, by = c("year"="START_DATE"))
+hiringSeasonAdj_df <- data.frame(year = seq(as.Date("2021-01-01"), as.Date("2023-12-31"), by = "month"), season_adj_hires = hiringSeasonAdj) %>% 
+  left_join(monthly_hiring, by = c("year"="START_DATE")) 
 
 gg2 <- hiringSeasonAdj_df %>% 
   pivot_longer(cols=c(season_adj_hires, hires_n), names_to = 'hires') %>%
@@ -149,7 +156,8 @@ gg2 <- hiringSeasonAdj_df %>%
   geom_line() + 
   ggthemes::theme_clean() + 
   labs(x="", y ="") + 
-  geom_vline(xintercept = as.Date("2023-10-01"))
+  geom_vline(xintercept = as.Date("2023-10-01")) + 
+  theme(legend.position = "bottom")
 gg2
 
 
