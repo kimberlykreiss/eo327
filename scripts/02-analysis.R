@@ -160,15 +160,48 @@ gg2 <- hiringSeasonAdj_df %>%
   theme(legend.position = "bottom")
 gg2
 
-gg_hires <- monthly_hiring %>% 
+synthetic_monthly_hiring <- monthly_hiring %>% 
+  mutate(hires_n = if_else(START_DATE >= "2023-10-01", hires_n + 1800, as.double(hires_n)), 
+         hires_n = if_else(START_DATE == "2023-09-01", hires_n + 2200, as.double(hires_n)), 
+         hires_n = if_else(START_DATE == "2023-08-01", hires_n + 1200, as.double(hires_n)), 
+         hires_n = if_else(START_DATE == "2023-07-01", hires_n + 800, as.double(hires_n)))
+gg_hires <- synthetic_monthly_hiring %>%
   ggplot(aes(x=as.Date(START_DATE), y=hires_n)) + 
   geom_point() + 
   geom_line() + 
   ggthemes::theme_clean() + 
   labs(x="", y ="") + 
-  geom_vline(xintercept = as.Date("2023-10-01"), color="red")
+  geom_vline(xintercept = as.Date("2023-10-01"), color="red") + 
+  geom_vline(xintercept = as.Date("2022-10-01"), color="red", linetype=2) + 
+  geom_vline(xintercept = as.Date("2021-10-01"), color="red", linetype=2)
 gg_hires
   
 
 
+synthetic_monthly_hiring_ts<- ts(synthetic_monthly_hiring, frequency = 12, start = c(2021, 1))
+synthetic_monthly_hiring_ts <- synthetic_monthly_hiring_ts[,2]
+
+plot.ts(synthetic_monthly_hiring_ts)
+synthetic_hiring_comp <- decompose(synthetic_monthly_hiring_ts)
+#plot(hiring_comp)
+
+synthetic_hiringSeasonAdj <- synthetic_monthly_hiring_ts - synthetic_hiring_comp$seasonal
+plot.ts(synthetic_hiringSeasonAdj)
+
+synthetic_hiringSeasonAdj_df <- data.frame(year = seq(as.Date("2021-01-01"), as.Date("2023-12-31"), by = "month"), 
+                                           season_adj_hires = synthetic_hiringSeasonAdj) %>% 
+  left_join(synthetic_monthly_hiring, by = c("year"="START_DATE")) 
+
+gg_synthetic <- synthetic_hiringSeasonAdj_df %>% 
+  pivot_longer(cols=c(season_adj_hires, hires_n), names_to = 'hires') %>%
+  ggplot(aes(x=year, y=value, group=hires, color=hires)) + 
+  geom_point() + 
+  geom_line() + 
+  ggthemes::theme_clean() + 
+  labs(x="", y ="") + 
+  theme(legend.position = "bottom") + 
+  geom_vline(xintercept = as.Date("2023-10-01"), color="red") + 
+  geom_vline(xintercept = as.Date("2022-10-01"), color="red", linetype=2) + 
+  geom_vline(xintercept = as.Date("2021-10-01"), color="red", linetype=2)
+gg_synthetic
 
