@@ -160,6 +160,15 @@ gg2 <- hiringSeasonAdj_df %>%
   theme(legend.position = "bottom")
 gg2
 
+gg_hires <- monthly_hiring %>% 
+  ggplot(aes(x=as.Date(START_DATE), y=hires_n)) + 
+  geom_point() + 
+  geom_line() + 
+  ggthemes::theme_clean() + 
+  labs(x="", y ="") + 
+  geom_vline(xintercept = as.Date("2023-10-01"), color="red")
+gg_hires
+  
 
 
 
