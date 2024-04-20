@@ -3,6 +3,7 @@ library(dbplyr)
 library(tidyverse)
 library(bgi)
 library(openxlsx)
+library(scales)
 library(readxl)
 
 source("scripts/global-variables.R")
@@ -15,20 +16,20 @@ con <- DBI::dbConnect(
   Pwd = Sys.getenv('pwd')
 )
 
-nj_ids <- query_table_sf(con, "PDL_CLEAN", "V2", "ROOT_PERSON") %>%
+nj_ids <- query_table_sf(con, "TEMPORARY_DATA", "ARATHI", "V2_ROOT_PERSON_APR24") %>%
   filter(BGI_STATE_NAME == "New Jersey") %>% 
   select(ID) 
 
 
-nj_educ <-  query_table_sf(con, "PDL_CLEAN", "V2", "EDUCATION") %>% #query_table_sf(con, "TEMPORARY_DATA", "ARATHI", "EDUCATION_V2_040324") %>% 
+nj_educ <-  query_table_sf(con, "TEMPORARY_DATA", "ARATHI", "V2_EDUCATION_APR24") %>% #query_table_sf(con, "TEMPORARY_DATA", "ARATHI", "EDUCATION_V2_040324") %>% 
   select(ID, BGI_DEGREE) %>% 
   inner_join(nj_ids, by = "ID") %>% 
   collect() %>% 
   unique()
 
-nj_experience <- query_table_sf(con, "PDL_CLEAN", "V2", "EXPERIENCE") %>%
-  select(ID, COMPANY_TYPE, COMPANY_NAME, BGI_ONET_NAME, START_DATE, END_DATE) %>% 
-  filter(START_DATE >= as.Date("2021-01-01")) %>%
+nj_experience <- query_table_sf(con, "PDL_WORKING", "APR_24", "EXPERIENCE") %>%
+  select(ID, COMPANY_TYPE, COMPANY_NAME, START_DATE, END_DATE) %>% 
+  filter(START_DATE >= as.Date("2019-01-01")) %>%
   inner_join(nj_ids, by = "ID") %>% 
   collect()
 
@@ -118,11 +119,14 @@ nj_govt_experience <- nj_experience %>%
   filter(COMPANY_NAME != "princeton university")
 
 monthly_hiring <- nj_final %>% 
-  filter(COMPANY_NAME %in% nj_govt_experience$COMPANY_NAME) %>%
+  mutate(START_DATE=as.Date(START_DATE), 
+         START_DATE= floor_date(START_DATE, unit="month")) %>%
+#  filter(COMPANY_NAME %in% nj_govt_experience$COMPANY_NAME) %>%
   group_by(START_DATE) %>% 
   summarise(hires_n = n()) %>% 
   ungroup() %>% 
-  mutate(START_DATE=as.Date(START_DATE)) #%>% 
+  mutate(START_DATE=as.Date(START_DATE)) %>% 
+  filter(START_DATE <= "2024-01-24")
   # mutate(hires_n = if_else(START_DATE >= "2023-10-01", hires_n + 500, as.double(hires_n)),
   #        hires_n = if_else(START_DATE == "2023-09-01", hires_n+2000, as.double(hires_n)))
  
@@ -130,13 +134,55 @@ monthly_hiring <- nj_final %>%
 #### let's vizualize monthly hiring 
 gg2 <- monthly_hiring %>% 
   ggplot(aes(x=as.Date(START_DATE), y=hires_n)) + 
-  geom_point() + 
+  #geom_point() + 
   geom_line() + 
   ggthemes::theme_clean() + 
-  labs(x="", y ="") 
+  labs(x="", y ="", title = "New Hires in the State of New Jersey") + 
+  scale_y_continuous(labels=comma) + 
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
+  geom_vline(xintercept = as.Date("2023-10-01"), color="red") + 
+  geom_vline(xintercept = as.Date("2023-04-01"), color="blue") #+ 
+  # geom_vline(xintercept = as.Date("2022-10-01"), color="red", linetype=2) + 
+  # geom_vline(xintercept = as.Date("2021-10-01"), color="red", linetype=2) + 
+  # geom_vline(xintercept = as.Date("2020-10-01"), color="red", linetype=2) + 
+  # geom_vline(xintercept = as.Date("2019-10-01"), color="red", linetype=2)
 gg2
 
-monthly_hiring_ts<- ts(monthly_hiring, frequency = 12, start = c(2021, 1))
+
+govt_monthly_hiring <- nj_final %>% 
+  mutate(START_DATE=as.Date(START_DATE), 
+         START_DATE= floor_date(START_DATE, unit="month")) %>%
+    filter(COMPANY_NAME %in% nj_govt_experience$COMPANY_NAME) %>%
+  group_by(START_DATE) %>% 
+  summarise(hires_n = n()) %>% 
+  ungroup() %>% 
+  mutate(START_DATE=as.Date(START_DATE)) %>% 
+  filter(START_DATE <= "2024-01-24")
+# mutate(hires_n = if_else(START_DATE >= "2023-10-01", hires_n + 500, as.double(hires_n)),
+#        hires_n = if_else(START_DATE == "2023-09-01", hires_n+2000, as.double(hires_n)))
+
+
+#### let's vizualize monthly hiring 
+gg2_govt <- govt_monthly_hiring %>% 
+  ggplot(aes(x=as.Date(START_DATE), y=hires_n)) + 
+  #geom_point() + 
+  geom_line() + 
+  ggthemes::theme_clean() + 
+  labs(x="", y ="", title = "New Hires in Government New Jersey") + 
+  scale_y_continuous(labels=comma) + 
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
+  geom_vline(xintercept = as.Date("2023-10-01"), color="red") + 
+  geom_vline(xintercept = as.Date("2023-04-01"), color="blue") #+ 
+# geom_vline(xintercept = as.Date("2022-10-01"), color="red", linetype=2) + 
+# geom_vline(xintercept = as.Date("2021-10-01"), color="red", linetype=2) + 
+# geom_vline(xintercept = as.Date("2020-10-01"), color="red", linetype=2) + 
+# geom_vline(xintercept = as.Date("2019-10-01"), color="red", linetype=2)
+gg2_govt
+
+## seasonally adjusted normal hiring 
+monthly_hiring_ts<- ts(monthly_hiring, frequency = 12, start = c(2019, 1))
 monthly_hiring_ts <- monthly_hiring_ts[,2]
 
 plot.ts(monthly_hiring_ts)
@@ -146,62 +192,102 @@ hiring_comp <- decompose(monthly_hiring_ts)
 hiringSeasonAdj <- monthly_hiring_ts - hiring_comp$seasonal
 plot.ts(hiringSeasonAdj)
 
-hiringSeasonAdj_df <- data.frame(year = seq(as.Date("2021-01-01"), as.Date("2023-12-31"), by = "month"), season_adj_hires = hiringSeasonAdj) %>% 
+hiringSeasonAdj_df <- data.frame(year = seq(as.Date("2019-01-01"), as.Date("2024-01-01"), by = "month"), season_adj_hires = hiringSeasonAdj) %>% 
   left_join(monthly_hiring, by = c("year"="START_DATE")) 
 
 gg2 <- hiringSeasonAdj_df %>% 
   pivot_longer(cols=c(season_adj_hires, hires_n), names_to = 'hires') %>%
   ggplot(aes(x=year, y=value, group=hires, color=hires)) + 
-  geom_point() + 
+#  geom_point() + 
   geom_line() + 
   ggthemes::theme_clean() + 
-  labs(x="", y ="") + 
+  labs(x="", y ="", title = "Hiring in All NJ Jobs (Seasonally Adjusted)") + 
   geom_vline(xintercept = as.Date("2023-10-01")) + 
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") + 
+  scale_color_manual(values=c("grey", "blue"), name = "", labels = c("No Adjustment", "Seasonally-Adjusted"))+
+  scale_y_continuous(labels=comma) + 
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
+  geom_vline(xintercept = as.Date("2023-10-01"), color="red") +
+  geom_vline(xintercept = as.Date("2023-04-01"), color="navyblue") 
 gg2
 
-synthetic_monthly_hiring <- monthly_hiring %>% 
-  mutate(hires_n = if_else(START_DATE >= "2023-10-01", hires_n + 1800, as.double(hires_n)), 
-         hires_n = if_else(START_DATE == "2023-09-01", hires_n + 2200, as.double(hires_n)), 
-         hires_n = if_else(START_DATE == "2023-08-01", hires_n + 1200, as.double(hires_n)), 
-         hires_n = if_else(START_DATE == "2023-07-01", hires_n + 800, as.double(hires_n)))
-gg_hires <- synthetic_monthly_hiring %>%
-  ggplot(aes(x=as.Date(START_DATE), y=hires_n)) + 
-  geom_point() + 
-  geom_line() + 
-  ggthemes::theme_clean() + 
-  labs(x="", y ="") + 
-  geom_vline(xintercept = as.Date("2023-10-01"), color="red") + 
-  geom_vline(xintercept = as.Date("2022-10-01"), color="red", linetype=2) + 
-  geom_vline(xintercept = as.Date("2021-10-01"), color="red", linetype=2)
-gg_hires
-  
+## seasonally adjusted monthly hiring for govt jobs
+monthly_hiring_ts<- ts(govt_monthly_hiring, frequency = 12, start = c(2019, 1))
+monthly_hiring_ts <- monthly_hiring_ts[,2]
 
-
-synthetic_monthly_hiring_ts<- ts(synthetic_monthly_hiring, frequency = 12, start = c(2021, 1))
-synthetic_monthly_hiring_ts <- synthetic_monthly_hiring_ts[,2]
-
-plot.ts(synthetic_monthly_hiring_ts)
-synthetic_hiring_comp <- decompose(synthetic_monthly_hiring_ts)
+plot.ts(monthly_hiring_ts)
+hiring_comp <- decompose(monthly_hiring_ts)
 #plot(hiring_comp)
 
-synthetic_hiringSeasonAdj <- synthetic_monthly_hiring_ts - synthetic_hiring_comp$seasonal
-plot.ts(synthetic_hiringSeasonAdj)
+hiringSeasonAdj <- monthly_hiring_ts - hiring_comp$seasonal
+plot.ts(hiringSeasonAdj)
 
-synthetic_hiringSeasonAdj_df <- data.frame(year = seq(as.Date("2021-01-01"), as.Date("2023-12-31"), by = "month"), 
-                                           season_adj_hires = synthetic_hiringSeasonAdj) %>% 
-  left_join(synthetic_monthly_hiring, by = c("year"="START_DATE")) 
+hiringSeasonAdj_df <- data.frame(year = seq(as.Date("2019-01-01"), as.Date("2024-01-01"), by = "month"), season_adj_hires = hiringSeasonAdj) %>% 
+  left_join(govt_monthly_hiring, by = c("year"="START_DATE")) 
 
-gg_synthetic <- synthetic_hiringSeasonAdj_df %>% 
+gg2_govt <- hiringSeasonAdj_df %>% 
   pivot_longer(cols=c(season_adj_hires, hires_n), names_to = 'hires') %>%
   ggplot(aes(x=year, y=value, group=hires, color=hires)) + 
-  geom_point() + 
+  #  geom_point() + 
   geom_line() + 
   ggthemes::theme_clean() + 
-  labs(x="", y ="") + 
+  labs(x="", y ="", title = "Hiring in NJ Government Jobs (Seasonally Adjusted)") + 
+  geom_vline(xintercept = as.Date("2023-10-01")) + 
   theme(legend.position = "bottom") + 
+  scale_color_manual(values=c("grey", "blue"), name = "", labels = c("No Adjustment", "Seasonally-Adjusted"))+
+  scale_y_continuous(labels=comma) + 
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
   geom_vline(xintercept = as.Date("2023-10-01"), color="red") + 
-  geom_vline(xintercept = as.Date("2022-10-01"), color="red", linetype=2) + 
-  geom_vline(xintercept = as.Date("2021-10-01"), color="red", linetype=2)
-gg_synthetic
+  geom_vline(xintercept = as.Date("2023-04-01"), color="navyblue") + 
+  ylim()
+gg2_govt
+
+######## JOLTS data ############ 
+
+jolts_sa <- read.xlsx("data/jolts_nj_hires.xlsx") %>% 
+  pivot_longer(names_to = "time", cols = c(Jan:Dec)) %>% 
+  mutate(START_DATE = paste(time, Year, sep="-"), 
+         START_DATE = as.Date(paste0("01-", START_DATE), format = "%d-%b-%Y")) %>% 
+  select(START_DATE, hires_n = value) %>% 
+  filter(!is.na(hires_n))
+
+jolts <- read.xlsx("data/jolts_not_seasonally_adj.xlsx") %>% 
+  pivot_longer(names_to = "time", cols = c(Jan:Dec)) %>% 
+  mutate(START_DATE = paste(time, Year, sep="-"), 
+         START_DATE = as.Date(paste0("01-", START_DATE), format = "%d-%b-%Y")) %>% 
+  select(START_DATE, hires_n = value) %>% 
+  filter(!is.na(hires_n))
+
+jolts_gg2 <- jolts %>% 
+  left_join(jolts_sa, by = c("START_DATE"), suffix = c("", "_seasAdj")) %>%
+  filter(START_DATE >= "2019-01-01") %>%
+  ggplot() + 
+  #geom_point() + 
+  geom_line(aes(x=as.Date(START_DATE), y=hires_n), color="grey") + 
+  geom_line(aes(x=as.Date(START_DATE), y=hires_n_seasAdj), color="blue") +
+  ggthemes::theme_clean() + 
+  labs(x="", y ="", title = "New Hires in the State of New Jersey") + 
+  scale_y_continuous(labels=comma) + 
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
+  geom_vline(xintercept = as.Date("2023-10-01"), color="red") + 
+  geom_vline(xintercept = as.Date("2023-04-01"), color="navyblue") + 
+  ylim(0, 400)#+ 
+# geom_vline(xintercept = as.Date("2022-10-01"), color="red", linetype=2) + 
+# geom_vline(xintercept = as.Date("2021-10-01"), color="red", linetype=2) + 
+# geom_vline(xintercept = as.Date("2020-10-01"), color="red", linetype=2) + 
+# geom_vline(xintercept = as.Date("2019-10-01"), color="red", linetype=2)
+jolts_gg2
+
+
+
+
+
+
+
+
+
+
 
