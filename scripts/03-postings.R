@@ -50,14 +50,13 @@ gg_educ_posts <- monthly_posts_educ %>%
   scale_y_continuous(labels=comma) + 
   scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-        legend.position = "bottom") +
-  scale_color_manual(values=c("orange", "grey"), name = "") + # , labels = c("BA+", "AA or less"))+
+        legend.position = "bottom", 
+        legend.title = element_blank()) +
+  scale_color_manual(values=c("orange", "grey"), labels= c("Non-BA", "BA+")) + # , labels = c("BA+", "AA or less"))+
   scale_y_continuous(labels=comma) + 
   scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
   geom_vline(xintercept = as.Date("2023-10-01"), color="red") +
-  geom_vline(xintercept = as.Date("2023-04-01"), color="navyblue") + 
-  labs(x="", y="", title = "All NJ postings where minimum education level 
-       is not specified or at most AA") 
+  geom_vline(xintercept = as.Date("2023-04-01"), color="navyblue")
 gg_educ_posts
 
 
@@ -97,14 +96,13 @@ gg_educ_posts <- nj_postings_aa_only %>%
   scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
         legend.position = "bottom") +
-  scale_color_manual(values=c("orange", "grey"), name = "") + # , labels = c("BA+", "AA or less"))+
+  scale_color_manual(values=c("orange", "grey"), labels= c("Non-BA", "BA+")) + # , labels = c("BA+", "AA or less"))+
   scale_y_continuous(labels=comma) + 
   scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
   geom_vline(xintercept = as.Date("2023-10-01"), color="red") +
   geom_vline(xintercept = as.Date("2023-04-01"), color="navyblue") + 
   geom_vline(xintercept = as.Date("2023-12-01"), color="grey", linetype=2) + 
-  labs(x="", y="", title = "All NJ postings where minimum education level 
-       is not specified or at most AA") 
+  labs(x="", y="", title = "All non-BA NJ postings by firm type") 
 gg_educ_posts
 
 

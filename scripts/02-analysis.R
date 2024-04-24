@@ -27,6 +27,8 @@ nj_educ_wide <- nj_educ %>%
   unique() %>%
   pivot_wider(names_from = BGI_DEGREE_MAX, values_from = n,values_fill=0)
 
+saveRDS(nj_educ_wide, "data/nj_educ_wide.rds")
+
 nj_experience <- query_table_sf(con, "PDL_WORKING", "APR_24", "EXPERIENCE") %>%
   select(ID, COMPANY_TYPE, COMPANY_NAME, START_DATE, END_DATE) %>% 
   filter(START_DATE >= as.Date("2019-01-01")) %>%
