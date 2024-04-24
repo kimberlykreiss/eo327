@@ -39,15 +39,170 @@ nj_educ_ba_plus <- nj_educ_wide %>%
   filter(`Master's Degree`== 1 | `Bachelor's Degree`==1 | `Doctorate Degree`==1)
 
 nrow(nj_educ_ba_plus) + nrow(nj_educ_aa)
-# nj_aa_most <-nj_educ %>% 
-#   filter((!(BGI_DEGREE_MAX %in% c("Master's Degree", "Bachelor's Degree", "Doctorate Degree")) | (str_detect(DEGREES, "associate")))) %>% 
-#   filter(!str_detect(DEGREES, "bachelor")) %>% 
-#   filter(!str_detect(DEGREES, "doctor")) %>% 
-#   filter(!str_detect(DEGREES, "master")) %>% 
-#   filter(!str_detect(DEGREES, "medical"))
 
-# nj_ba_at_least <- nj_educ %>% 
-#   filter(!(ID %in% nj_aa_most$ID))
+##### Now merge with nj_experience
+nj_experience <- readRDS("data/nj_experience.rds")
+
+aa_exp <- nj_educ_aa %>% 
+  inner_join(nj_experience, by ="ID")
+
+AA_hires_into_govt <- AA_exp %>% 
+  filter(COMPANY_NAME %in% tolower(unique_gfs$COMPANY_NAME)) %>% 
+  filter(COMPANY_NAME != "princeton university") %>% 
+  group_by(START_DATE) %>% 
+  summarise(n=n())
+
+ba_plus_exp <- nj_educ_ba_plus %>% 
+  inner_join(nj_experience, by ="ID")
+
+BA_plus_hires_into_govt <- ba_plus_exp %>% 
+  filter(COMPANY_NAME %in% tolower(unique_gfs$COMPANY_NAME)) %>% 
+  filter(COMPANY_NAME != "princeton university") %>% 
+  group_by(START_DATE) %>% 
+  summarise(n=n())
+
+############################################ 
+# Make the graph for BA+ hires in govt 
+############################################
+
+govt_monthly_hiring_ba_plus <- ba_plus_exp %>% 
+  mutate(START_DATE=as.Date(START_DATE), 
+         START_DATE= floor_date(START_DATE, unit="month")) %>%
+  filter(COMPANY_NAME %in% nj_govt_experience$COMPANY_NAME) %>%
+  group_by(START_DATE) %>% 
+  summarise(hires_n = n()) %>% 
+  ungroup() %>% 
+  mutate(START_DATE=as.Date(START_DATE)) %>% 
+  filter(START_DATE <= "2024-01-24")
+
+gg2_ba_plus_govt <- govt_monthly_hiring_ba_plus %>% 
+  ggplot(aes(x=as.Date(START_DATE), y=hires_n)) + 
+  #geom_point() + 
+  geom_line() + 
+  ggthemes::theme_clean() + 
+  labs(x="", y ="", title = "NJ Hires with at least BA") + 
+  scale_y_continuous(labels=comma) + 
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
+  geom_vline(xintercept = as.Date("2023-10-01"), color="red") + 
+  geom_vline(xintercept = as.Date("2023-04-01"), color="blue")
+gg2_ba_plus_govt
+
+
+## seasonally adjusted ba plus govt hiring 
+ba_plus_monthly_hiring_ts<- ts(govt_monthly_hiring_ba_plus, frequency = 12, start = c(2019, 1))
+ba_plus_monthly_hiring_ts <- ba_plus_monthly_hiring_ts[,2]
+
+plot.ts(ba_plus_monthly_hiring_ts)
+ba_plus_hiring_comp <- decompose(ba_plus_monthly_hiring_ts, type="multiplicative")
+#plot(hiring_comp)
+
+ba_plus_hiringSeasonAdj <- ba_plus_monthly_hiring_ts/ba_plus_hiring_comp$seasonal
+plot.ts(ba_plus_hiringSeasonAdj)
+
+ba_plus_hiringSeasonAdj_df <- data.frame(year = seq(as.Date("2019-01-01"), as.Date("2024-01-01"), by = "month"), season_adj_hires = hiringSeasonAdj) %>% 
+  left_join(govt_monthly_hiring_ba_plus, by = c("year"="START_DATE")) 
+
+gg2_govt_ba_plus <- ba_plus_hiringSeasonAdj_df %>% 
+  pivot_longer(cols=c(season_adj_hires, hires_n), names_to = 'hires') %>%
+  ggplot(aes(x=year, y=value, group=hires, color=hires)) + 
+  #  geom_point() + 
+  geom_line() + 
+  ggthemes::theme_clean() + 
+  labs(x="", y ="", title = "Hiring in NJ Gov't Jobs for at least BA (Seasonally Adjusted)") + 
+  geom_vline(xintercept = as.Date("2023-10-01")) + 
+  theme(legend.position = "bottom") + 
+  scale_color_manual(values=c("grey", "blue"), name = "", labels = c("No Adjustment", "Seasonally-Adjusted"))+
+  scale_y_continuous(labels=comma) + 
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
+  geom_vline(xintercept = as.Date("2023-10-01"), color="red") +
+  geom_vline(xintercept = as.Date("2023-04-01"), color="navyblue") 
+gg2_govt_ba_plus
+
+
+################################
+# plot BA+ and <=AA SA on the same graph
+################################
+## seasonally adjusted normal hiring 
+aa_monthly_hiring_ts<- ts(govt_monthly_hiring_aa, frequency = 12, start = c(2019, 1))
+aa_monthly_hiring_ts <- aa_monthly_hiring_ts[,2]
+
+plot.ts(aa_monthly_hiring_ts)
+aa_hiring_comp <- decompose(aa_monthly_hiring_ts, type="multiplicative")
+#plot(hiring_comp)
+
+aa_hiringSeasonAdj <- aa_monthly_hiring_ts/aa_hiring_comp$seasonal
+plot.ts(aa_hiringSeasonAdj)
+
+aa_hiringSeasonAdj_df <- data.frame(year = seq(as.Date("2019-01-01"), as.Date("2024-01-01"), by = "month"), season_adj_hires = aa_hiringSeasonAdj) %>% 
+  left_join(govt_monthly_hiring_aa, by = c("year"="START_DATE")) 
+
+
+gg2_govt_aa <- aa_hiringSeasonAdj_df %>% 
+  pivot_longer(cols=c(season_adj_hires, hires_n), names_to = 'hires') %>%
+  ggplot(aes(x=year, y=value, group=hires, color=hires)) + 
+  #  geom_point() + 
+  geom_line() + 
+  ggthemes::theme_clean() + 
+  labs(x="", y ="", title = "Hiring in NJ Gov't Jobs for AA or Less (Seasonally Adjusted)") + 
+  geom_vline(xintercept = as.Date("2023-10-01")) + 
+  theme(legend.position = "bottom") + 
+  scale_color_manual(values=c("grey", "blue"), name = "", labels = c("No Adjustment", "Seasonally-Adjusted"))+
+  scale_y_continuous(labels=comma) + 
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
+  geom_vline(xintercept = as.Date("2023-10-01"), color="red") +
+  geom_vline(xintercept = as.Date("2023-04-01"), color="navyblue") 
+gg2_govt_aa
+
+######################
+# Together 
+######################
+
+all_govt_hiring <- full_join(govt_monthly_hiring_aa, govt_monthly_hiring_ba_plus, by = "START_DATE", 
+                             suffix = c("_aa", "_ba_plus"))
+
+
+gg2_all_govt <- all_govt_hiring %>% 
+  pivot_longer(cols=c(hires_n_aa, hires_n_ba_plus), names_to = 'hires') %>%
+  ggplot(aes(x=START_DATE, y=value, group=hires, color=hires)) + 
+  #  geom_point() + 
+  geom_line() + 
+  ggthemes::theme_clean() + 
+  labs(x="", y ="", title = "Hiring in NJ Gov't Jobs by Education") + 
+  geom_vline(xintercept = as.Date("2023-10-01")) + 
+  theme(legend.position = "bottom") + 
+  scale_color_manual(values=c("grey", "blue"), name = "", labels = c("At most AA", "BA+")) +
+  scale_y_continuous(labels=comma) + 
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
+  geom_vline(xintercept = as.Date("2023-10-01"), color="red") +
+  geom_vline(xintercept = as.Date("2023-04-01"), color="navyblue") +geom_smooth()
+gg2_all_govt
+
+
+
+all_hiringSeasonAdj_df <- data.frame(year = seq(as.Date("2019-01-01"), as.Date("2024-01-01"), by = "month"), aa_season_adj_hires = aa_hiringSeasonAdj) %>% 
+  left_join(data.frame(year = seq(as.Date("2019-01-01"), as.Date("2024-01-01"), by = "month"), ba_plus_season_adj_hires = ba_plus_hiringSeasonAdj), by = 'year') 
+
+
+gg2_govt_sa <- all_hiringSeasonAdj_df %>% 
+  pivot_longer(cols=c(aa_season_adj_hires, ba_plus_season_adj_hires), names_to = 'hires') %>%
+  ggplot(aes(x=year, y=value, group=hires, color=hires)) + 
+  #  geom_point() + 
+  geom_line() + 
+  ggthemes::theme_clean() + 
+  labs(x="", y ="", title = "Hiring in NJ Gov't Jobs by Education (Seasonally Adjusted)") + 
+  geom_vline(xintercept = as.Date("2023-10-01")) + 
+  theme(legend.position = "bottom") + 
+  scale_color_manual(values=c("grey", "blue"), name = "", labels = c("At most AA", "BA+"))+
+  scale_y_continuous(labels=comma) + 
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
+  geom_vline(xintercept = as.Date("2023-10-01"), color="red") +
+  geom_vline(xintercept = as.Date("2023-04-01"), color="navyblue") #+geom_smooth()
+gg2_govt_sa
 
 
 

@@ -14,42 +14,18 @@ nj_ids <- query_table_sf(con, "TEMPORARY_DATA", "ARATHI", "V2_ROOT_PERSON_APR24"
 
 
 nj_educ <-  query_table_sf(con, "TEMPORARY_DATA", "ARATHI", "V2_EDUCATION_APR24") %>% #query_table_sf(con, "TEMPORARY_DATA", "ARATHI", "EDUCATION_V2_040324") %>% 
-  select(ID, BGI_DEGREE,  BGI_DEGREE_MAX, BGI_SCHOOL_CONFIDENCE, DEGREES ) %>% 
+  select(ID, BGI_DEGREE,  BGI_DEGREE_MAX, BGI_SCHOOL_CONFIDENCE, DEGREES, END_DATE ) %>% 
   inner_join(nj_ids, by = "ID") %>% 
   collect() %>% 
-  unique()
-
-
-nj_educ_conf <- nj_educ %>% 
+  unique() %>% 
   filter(BGI_SCHOOL_CONFIDENCE >= 78)
 
-saveRDS(nj_educ_conf, "data/nj_educ_conf.rds")
-
-
-
-nj_educ_conf_aa <- nj_educ_conf %>% 
-  filter((!(BGI_DEGREE_MAX %in% c("Master's Degree", "Bachelor's Degree", "Doctorate Degree")) | (str_detect(DEGREES, "associate")))) %>% 
-  filter(!str_detect(DEGREES, "bachelor")) %>% 
-  filter(!str_detect(DEGREES, "doctor")) %>% 
-  filter(!str_detect(DEGREES, "master")) %>% 
-  filter(!str_detect(DEGREES, "medical"))
-
-IDS_all <- nj_educ_conf %>% 
-  select(ID) %>% 
-  distinct()
-
-IDS_aa <- nj_educ_conf_aa %>% 
-  select(ID) %>% 
-  distinct()
-
-nj_educ_conf_non_aa <- nj_educ_conf %>% 
-  filter(!(ID %in% nj_educ_conf_aa$ID))
-
-IDS_non_aa <- nj_educ_conf_non_aa %>% 
-  select(ID) %>% 
-  distinct()
-
-nrow(IDS_aa) + nrow(IDS_non_aa) == nrow(IDS_all)
+nj_educ_wide <- nj_educ %>% 
+  select(ID, BGI_DEGREE_MAX) %>% 
+  mutate(BGI_DEGREE_MAX = if_else(is.na(BGI_DEGREE_MAX), "Not Listed", BGI_DEGREE_MAX), 
+         n=1)%>%
+  unique() %>%
+  pivot_wider(names_from = BGI_DEGREE_MAX, values_from = n,values_fill=0)
 
 nj_experience <- query_table_sf(con, "PDL_WORKING", "APR_24", "EXPERIENCE") %>%
   select(ID, COMPANY_TYPE, COMPANY_NAME, START_DATE, END_DATE) %>% 
@@ -66,10 +42,9 @@ saveRDS(nj_experience, "data/nj_experience.rds")
 # saveRDS(nj_final, "data/nj_final.rds")
 
 #### All associate degree holders who started a job after 2022
-nj_aa_job_starters <- nj_experience %>% #filter(nj_experience, START_DATE >= as.Date("2023-01-01")) %>% 
-  inner_join(IDS_aa, 
-            by = c("ID")) %>% 
-  distinct()
+nj_aa_job_starters <- nj_educ_wide %>% 
+  filter(`Master's Degree`!= 1 & `Bachelor's Degree`!=1 & `Doctorate Degree`!=1) %>% 
+  inner_join(nj_experience, by ="ID")
 
 
 
