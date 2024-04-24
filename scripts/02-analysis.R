@@ -19,32 +19,63 @@ nj_educ <-  query_table_sf(con, "TEMPORARY_DATA", "ARATHI", "V2_EDUCATION_APR24"
   collect() %>% 
   unique()
 
+
 nj_educ_conf <- nj_educ %>% 
   filter(BGI_SCHOOL_CONFIDENCE >= 78)
+
+saveRDS(nj_educ_conf, "data/nj_educ_conf.rds")
+
+
+
+nj_educ_conf_aa <- nj_educ_conf %>% 
+  filter((!(BGI_DEGREE_MAX %in% c("Master's Degree", "Bachelor's Degree", "Doctorate Degree")) | (str_detect(DEGREES, "associate")))) %>% 
+  filter(!str_detect(DEGREES, "bachelor")) %>% 
+  filter(!str_detect(DEGREES, "doctor")) %>% 
+  filter(!str_detect(DEGREES, "master")) %>% 
+  filter(!str_detect(DEGREES, "medical"))
+
+IDS_all <- nj_educ_conf %>% 
+  select(ID) %>% 
+  distinct()
+
+IDS_aa <- nj_educ_conf_aa %>% 
+  select(ID) %>% 
+  distinct()
+
+nj_educ_conf_non_aa <- nj_educ_conf %>% 
+  filter(!(ID %in% nj_educ_conf_aa$ID))
+
+IDS_non_aa <- nj_educ_conf_non_aa %>% 
+  select(ID) %>% 
+  distinct()
+
+nrow(IDS_aa) + nrow(IDS_non_aa) == nrow(IDS_all)
 
 nj_experience <- query_table_sf(con, "PDL_WORKING", "APR_24", "EXPERIENCE") %>%
   select(ID, COMPANY_TYPE, COMPANY_NAME, START_DATE, END_DATE) %>% 
   filter(START_DATE >= as.Date("2019-01-01")) %>%
   inner_join(nj_ids, by = "ID") %>% 
-  collect()
+  collect() %>% 
+  distinct()
 
+saveRDS(nj_experience, "data/nj_experience.rds")
 
-nj_final <- inner_join(nj_educ, nj_experience, by = "ID") %>% 
-  collect()
+# nj_final <- inner_join(nj_educ, nj_experience, by = "ID") %>% 
+#   collect()
+# 
+# saveRDS(nj_final, "data/nj_final.rds")
 
 #### All associate degree holders who started a job after 2022
 nj_aa_job_starters <- nj_experience %>% #filter(nj_experience, START_DATE >= as.Date("2023-01-01")) %>% 
-  inner_join(nj_educ_conf %>% 
-              filter((!(BGI_DEGREE_MAX %in% c("Master's Degree", "Bachelor's Degree", "Doctorate Degree")) | (str_detect(DEGREES, "associate")))) %>% 
-               filter(!str_detect(DEGREES, "bachelor")) %>% 
-               filter(!str_detect(DEGREES, "doctor")) %>% 
-               filter(!str_detect(DEGREES, "master")) %>% 
-               filter(!str_detect(DEGREES, "medical")), 
-            by = c("ID"))
+  inner_join(IDS_aa, 
+            by = c("ID")) %>% 
+  distinct()
 
 
+
+saveRDS(nj_aa_job_starters, "data/nj_aa_job_starts.rds")
 #################################################### 
-# What types of skills are common to these roles? 
+# What share of postings change in 2023 as a result of the order?
 ## Run code below before doing above analysis to get the govt jobs
 #####################################################
 
@@ -79,44 +110,48 @@ opra_all4yr_jobs <-
 
 nj_postings <- readRDS("data/nj_postings.rds")
 
-filter_phrases <- c(govt_firms, school_related)
+# filter_phrases <- c(govt_firms, school_related)
+# 
+# govt_firms_source <- nj_postings %>%
+#   mutate(COMPANY_NAME_AND_RAW = paste(COMPANY_NAME, COMPANY_RAW, sep="/")) %>% 
+#   filter(Reduce(`|`, lapply(filter_phrases, function(phrase)
+#     grepl(phrase, COMPANY_RAW, ignore.case = TRUE))) |
+#       (COMPANY_RAW %in% NJ_counties) |
+#       (COMPANY_RAW %in% NJ_towns) | (COMPANY_RAW %in% NJ_counties) | 
+#       (COMPANY_RAW %in% NJ_towns)) %>%
+#   filter(!str_detect(COMPANY_NAME_AND_RAW, "Foundation")) %>%
+#   filter(!str_detect(COMPANY_NAME_AND_RAW, "United States Department")) %>%
+#   filter(!str_detect(COMPANY_NAME_AND_RAW, "Sales Department")) %>%
+#   filter(!str_detect(COMPANY_NAME_AND_RAW, "Department Store")) %>%
+#   filter(!str_detect(COMPANY_NAME_AND_RAW, "Animal Clinic")) %>%
+#   filter(!str_detect(COMPANY_NAME_AND_RAW, "Animal Hospital")) %>%
+#   filter(!str_detect(COMPANY_NAME_AND_RAW, "Central Avenue Special Improvement")) %>%
+#   filter(!str_detect(COMPANY_NAME_AND_RAW, "Head Start")) %>%
+#   filter(!str_detect(COMPANY_NAME_AND_RAW, "Adult Day Center")) %>%
+#   filter(!str_detect(COMPANY_NAME_AND_RAW, "Parts Authority")) %>%
+#   filter(!str_detect(COMPANY_NAME_AND_RAW, "Citco Agency")) %>%
+#   filter(!str_detect(COMPANY_NAME_AND_RAW, "Rose's Agency")) %>%
+#   filter(!str_detect(COMPANY_NAME_AND_RAW, "U.S Environmental Protection Agency")) %>%
+#   filter(!str_detect(COMPANY_NAME_AND_RAW, "The Arc")) %>%
+#   filter(!str_detect(COMPANY_NAME_AND_RAW, "Arc Mercer"))
+# 
+# all_firms_nj <- nj_postings %>% 
+#   filter(POSTED >= as.Date("2023-01-01") & POSTED <= as.Date("2023-12-31")) %>% 
+#   select(COMPANY_NAME, COMPANY_RAW) %>% 
+#   distinct()
+# unique_gfs <- govt_firms_source %>%
+#   select(COMPANY_NAME, COMPANY_RAW) %>%
+#   distinct()
+# 
+# saveRDS(unique_gfs, "data/unique_gfs.rds")
 
-govt_firms_source <- nj_postings %>%
-  mutate(COMPANY_NAME_AND_RAW = paste(COMPANY_NAME, COMPANY_RAW, sep="/")) %>% 
-  filter(Reduce(`|`, lapply(filter_phrases, function(phrase)
-    grepl(phrase, COMPANY_RAW, ignore.case = TRUE))) |
-      (COMPANY_RAW %in% NJ_counties) |
-      (COMPANY_RAW %in% NJ_towns) | (COMPANY_RAW %in% NJ_counties) | 
-      (COMPANY_RAW %in% NJ_towns)) %>%
-  filter(!str_detect(COMPANY_NAME_AND_RAW, "Foundation")) %>%
-  filter(!str_detect(COMPANY_NAME_AND_RAW, "United States Department")) %>%
-  filter(!str_detect(COMPANY_NAME_AND_RAW, "Sales Department")) %>%
-  filter(!str_detect(COMPANY_NAME_AND_RAW, "Department Store")) %>%
-  filter(!str_detect(COMPANY_NAME_AND_RAW, "Animal Clinic")) %>%
-  filter(!str_detect(COMPANY_NAME_AND_RAW, "Animal Hospital")) %>%
-  filter(!str_detect(COMPANY_NAME_AND_RAW, "Central Avenue Special Improvement")) %>%
-  filter(!str_detect(COMPANY_NAME_AND_RAW, "Head Start")) %>%
-  filter(!str_detect(COMPANY_NAME_AND_RAW, "Adult Day Center")) %>%
-  filter(!str_detect(COMPANY_NAME_AND_RAW, "Parts Authority")) %>%
-  filter(!str_detect(COMPANY_NAME_AND_RAW, "Citco Agency")) %>%
-  filter(!str_detect(COMPANY_NAME_AND_RAW, "Rose's Agency")) %>%
-  filter(!str_detect(COMPANY_NAME_AND_RAW, "U.S Environmental Protection Agency")) %>%
-  filter(!str_detect(COMPANY_NAME_AND_RAW, "The Arc")) %>%
-  filter(!str_detect(COMPANY_NAME_AND_RAW, "Arc Mercer"))
+unique_gfs <- readRDS("data/unique_gfs.rds")
 
-all_firms_nj <- nj_postings %>% 
-  filter(POSTED >= as.Date("2023-01-01") & POSTED <= as.Date("2023-12-31")) %>% 
-  select(COMPANY_NAME, COMPANY_RAW) %>% 
-  distinct()
-unique_gfs <- govt_firms_source %>%
-  select(COMPANY_NAME, COMPANY_RAW) %>%
-  distinct()
-
-govt_firms_source_2023 <- govt_firms_source %>% 
-  filter(POSTED >= as.Date("2023-01-01") & POSTED <= as.Date("2023-12-31"))
-nj_postings_2023 <- nj_postings %>% 
-  filter(POSTED >= as.Date("2023-01-01") & POSTED <= as.Date("2023-12-31")) 
-nrow(govt_firms_source_2023) / nrow(nj_postings_2023)
+# govt_firms_source_2023 <- govt_firms_source %>% 
+#   filter(POSTED >= as.Date("2023-01-01") & POSTED <= as.Date("2023-12-31"))
+# nj_postings_2023 <- nj_postings %>% 
+#   filter(POSTED >= as.Date("2023-01-01") & POSTED <= as.Date("2023-12-31")) 
+# nrow(govt_firms_source_2023) / nrow(nj_postings_2023)
 
 
 pdl_nj_employers <- nj_experience %>% 
@@ -127,7 +162,7 @@ nj_govt_experience <- nj_experience %>%
   filter(COMPANY_NAME %in% tolower(unique_gfs$COMPANY_NAME)) %>% 
   filter(COMPANY_NAME != "princeton university")
 
-monthly_hiring <- nj_final %>% 
+monthly_hiring <- nj_experience %>% 
   mutate(START_DATE=as.Date(START_DATE), 
          START_DATE= floor_date(START_DATE, unit="month")) %>%
 #  filter(COMPANY_NAME %in% nj_govt_experience$COMPANY_NAME) %>%
@@ -161,7 +196,7 @@ gg2 <- monthly_hiring %>%
 gg2
 
 
-govt_monthly_hiring <- nj_final %>% 
+govt_monthly_hiring <- nj_experience %>% 
   mutate(START_DATE=as.Date(START_DATE), 
          START_DATE= floor_date(START_DATE, unit="month")) %>%
     filter(COMPANY_NAME %in% nj_govt_experience$COMPANY_NAME) %>%
@@ -172,7 +207,6 @@ govt_monthly_hiring <- nj_final %>%
   filter(START_DATE <= "2024-01-24")
 # mutate(hires_n = if_else(START_DATE >= "2023-10-01", hires_n + 500, as.double(hires_n)),
 #        hires_n = if_else(START_DATE == "2023-09-01", hires_n+2000, as.double(hires_n)))
-
 
 #####################################
 #### let's vizualize monthly hiring for govt workers
@@ -373,6 +407,8 @@ gg2_govt_aa <- hiringSeasonAdj_df %>%
   geom_vline(xintercept = as.Date("2023-10-01"), color="red") +
   geom_vline(xintercept = as.Date("2023-04-01"), color="navyblue") 
 gg2_govt_aa
+
+
 ###############################
 ######## JOLTS data ############ 
 ################################

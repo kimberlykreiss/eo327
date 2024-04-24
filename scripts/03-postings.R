@@ -23,6 +23,18 @@ monthly_posts <- nj_postings_ %>%
   group_by(POST_DATE) %>% 
   summarise(total_n=n())
 
+gg2_posts <- monthly_posts %>% 
+ # filter(POST_DATE >= "2021-01-01") %>%
+  ggplot(aes(x=as.Date(POST_DATE), y=total_n)) + 
+  geom_line() +
+  ggthemes::theme_clean() + 
+  scale_y_continuous(labels=comma) + 
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        legend.position = "bottom")
+
+gg2_posts
+
 monthly_posts_educ <- nj_postings_ %>% 
   group_by(POST_DATE, aa_or_less) %>% 
   summarise(n=n()) %>% 
@@ -94,6 +106,5 @@ gg_educ_posts <- nj_postings_aa_only %>%
   labs(x="", y="", title = "All NJ postings where minimum education level 
        is not specified or at most AA") 
 gg_educ_posts
-
 
 
