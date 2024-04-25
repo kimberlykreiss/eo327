@@ -1,4 +1,4 @@
-source("scripts/global-variables.R")
+source(paste0(here::here(),"/scripts/global-variables.R"))
 
 con <- DBI::dbConnect(
   odbc::odbc(),
@@ -55,9 +55,9 @@ nj_educ_ba_plus <- nj_educ_wide %>%
 nrow(nj_educ_ba_plus) + nrow(nj_educ_aa)
 
 
-unique_gfs <- readRDS("data/unique_gfs.rds")
+unique_gfs <- readRDS(paste0(here::here(),"/data/unique_gfs.rds"))
 ##### Now merge with nj_experience
-nj_experience <- readRDS("data/nj_experience.rds")
+nj_experience <- readRDS(paste0(here::here(),"/data/nj_experience.rds"))
 
 aa_exp <- nj_educ_aa %>% 
   inner_join(nj_experience, by ="ID")
