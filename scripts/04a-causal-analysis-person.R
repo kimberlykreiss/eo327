@@ -251,6 +251,44 @@ gg2_govt_sa <- all_hiringSeasonAdj_df %>%
   geom_vline(xintercept = as.Date("2023-04-01"), color="navyblue") #+geom_smooth()
 gg2_govt_sa
 
+#########################
+# Regression 
+#########################
+
+government_hires <- all_govt_hiring %>% 
+  mutate(month = 1:n()) %>% 
+  pivot_longer(cols = c(hires_n_aa, hires_n_ba_plus), names_to = "educ", values_to = "hires") %>%
+  mutate(after_policy = as.numeric(START_DATE >= "2023-10-01"), 
+         treated = if_else(educ == 'hires_n_aa', 1, 0))
+
+did_model <- lm(hires ~  treated * month, data = government_hires)
+summary(did_model)
+
+did_model2 <- lm(hires ~  treated + after_policy + treated*after_policy, data = government_hires)
+summary(did_model2)
+
+government_hires_sa <- all_hiringSeasonAdj_df %>% 
+  mutate(month = 1:n()) %>% 
+  pivot_longer(cols = c(aa_season_adj_hires, ba_plus_season_adj_hires), names_to = "educ", values_to = "hires") %>%
+  mutate(after_policy = as.numeric(year >= "2023-10-01"), 
+         treated = if_else(educ == 'aa_season_adj_hires', 1, 0))
+
+did_model_sa <- lm(hires ~  treated * month, data = government_hires_sa)
+summary(did_model_sa)
+
+did_model_sa2 <- lm(hires ~  treated + after_policy + treated*after_policy, data = government_hires_sa)
+summary(did_model_sa2)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
