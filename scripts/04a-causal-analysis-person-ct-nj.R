@@ -159,7 +159,7 @@ gg2_aa_govt_nj <- govt_monthly_hiring_aa_nj %>%
   #geom_point() + 
   geom_line() + 
   ggthemes::theme_clean() + 
-  labs(x="", y ="", title = "NJ Hires with at least BA") + 
+  labs(x="", y ="", title = "NJ Gov't Hires for non-BA holders") + 
   scale_y_continuous(labels=comma) + 
   scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
@@ -188,7 +188,7 @@ gg2_govt_aa_nj <- aa_hiringSeasonAdj_df_nj %>%
   #  geom_point() + 
   geom_line() + 
   ggthemes::theme_clean() + 
-  labs(x="", y ="", title = "Hiring in NJ Gov't Jobs for AA or Less (Seasonally Adjusted)") + 
+  labs(x="", y ="", title = "NJ Gov't Hires for non-BA holders (Seasonally Adjusted)") + 
   geom_vline(xintercept = as.Date("2023-10-01")) + 
   theme(legend.position = "bottom") + 
   scale_color_manual(values=c("grey", "blue"), name = "", labels = c("No Adjustment", "Seasonally-Adjusted"))+
@@ -217,7 +217,7 @@ gg2_aa_govt_ct <- govt_monthly_hiring_aa_ct %>%
   #geom_point() + 
   geom_line() + 
   ggthemes::theme_clean() + 
-  labs(x="", y ="", title = "ct Hires with at least BA") + 
+  labs(x="", y ="", title = "CT Gov't Hires for non-BA holders") + 
   scale_y_continuous(labels=comma) + 
   scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
@@ -246,7 +246,7 @@ gg2_govt_aa_ct <- aa_hiringSeasonAdj_df_ct %>%
   #  geom_point() + 
   geom_line() + 
   ggthemes::theme_clean() + 
-  labs(x="", y ="", title = "Hiring in ct Gov't Jobs for AA or Less (Seasonally Adjusted)") + 
+  labs(x="", y ="", title = "CT Gov't Hires for non-BA holders (Seasonally Adjusted)") + 
   geom_vline(xintercept = as.Date("2023-10-01")) + 
   theme(legend.position = "bottom") + 
   scale_color_manual(values=c("grey", "blue"), name = "", labels = c("No Adjustment", "Seasonally-Adjusted"))+
@@ -293,13 +293,13 @@ all_hiringSeasonAdj_df <- data.frame(year = seq(as.Date("2019-01-01"), as.Date("
 
 
 gg2_govt_sa <- all_hiringSeasonAdj_df %>% 
-#  filter(year >= "2022-01-01") %>% 
+ # filter(year >= "2022-01-01") %>% 
   pivot_longer(cols=c(aa_nj_season_adj_hires, aa_ct_season_adj_hires), names_to = 'hires') %>%
   ggplot(aes(x=year, y=value, group=hires, color=hires)) + 
   #  geom_point() + 
   geom_line() + 
   ggthemes::theme_clean() + 
-  labs(x="", y ="", title = "Hiring in NJ Gov't Jobs by Education (Seasonally Adjusted)") + 
+  labs(x="", y ="", title = "Hiring in CT vs NJ for non-BA holders (Seasonally Adjusted)") + 
   geom_vline(xintercept = as.Date("2023-10-01")) + 
   theme(legend.position = "bottom") + 
   scale_color_manual(values=c("orange", "grey"), name = "", labels = c("CT", "NJ"))+

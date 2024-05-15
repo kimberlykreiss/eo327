@@ -68,7 +68,7 @@ did_model2 <- lm(hires ~  treated + after_policy + treated*after_policy, data = 
 summary(did_model2)
 
 government_hires_sa <- all_hiringSeasonAdj_df %>% 
-    filter(START_DATE >= "2022-09-01") %>% 
+    filter(year >= "2022-09-01") %>% 
   mutate(month = 1:n()) %>% 
   pivot_longer(cols = c(aa_nj_season_adj_hires, aa_ct_season_adj_hires), names_to = "state", values_to = "hires") %>%
   mutate(after_policy = as.numeric(year >= "2023-10-01"), 
