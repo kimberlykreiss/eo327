@@ -55,7 +55,7 @@ stargazer(did_model2, did_model_sa2)
 
 
 government_hires <- all_govt_hiring %>% 
-    filter(START_DATE >= "2022-09-01") %>% 
+    filter(START_DATE >= "2021-01-01") %>% 
   mutate(month = 1:n()) %>% 
   pivot_longer(cols = c(hires_n_nj, hires_n_ct), names_to = "state", values_to = "hires") %>%
   mutate(after_policy = as.numeric(START_DATE >= "2023-10-01"), 
@@ -68,7 +68,7 @@ did_model2 <- lm(hires ~  treated + after_policy + treated*after_policy, data = 
 summary(did_model2)
 
 government_hires_sa <- all_hiringSeasonAdj_df %>% 
-    filter(year >= "2022-09-01") %>% 
+    filter(year >= "2021-01-01") %>% 
   mutate(month = 1:n()) %>% 
   pivot_longer(cols = c(aa_nj_season_adj_hires, aa_ct_season_adj_hires), names_to = "state", values_to = "hires") %>%
   mutate(after_policy = as.numeric(year >= "2023-10-01"), 
@@ -86,7 +86,7 @@ summary(did_model_sa2)
 ```{r, results='asis', echo=F}
 library(stargazer)
 
-stargazer(did_model2, did_model_sa2)
+stargazer(did_model2, did_model_sa2, heading=F)
 
 ```
 

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2024.2.23)  25 APR 2024 15:18
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2024.2.23)  16 MAY 2024 14:24
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -322,6 +322,9 @@ File: l3backend-pdftex.def 2024-02-20 L3 backend support: PDF output (pdfTeX)
 
 LaTeX Warning: Label `' multiply defined.
 
+
+LaTeX Warning: Label `' multiply defined.
+
 )
 \openout1 = `05-regression-output.aux'.
 
@@ -401,43 +404,43 @@ LaTeX Font Warning: Font shape `T1/lmtt/bx/it' in size <10> not available
 LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 119.
 (/home/analyst/.TinyTeX/texmf-dist/tex/latex/lm/ts1lmtt.fd
 File: ts1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-Overfull \hbox (18.49356pt too wide) in paragraph at lines 148--148
+) [1
+
+{/home/analyst/.TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/home/analyst/.TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}{/home/analyst/.TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}] [2]
+Overfull \hbox (18.49356pt too wide) in paragraph at lines 254--254
 []\T1/lmtt/m/n/10 ##  Hlavac, Marek (2022). stargazer: Well-Formatted Regression and Summary Statistics Tables.[] 
  []
 
-LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 161.
+LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 267.
 (/home/analyst/.TinyTeX/texmf-dist/tex/latex/lm/ot1lmr.fd
 File: ot1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for OML+lmm on input line 161.
+LaTeX Font Info:    Trying to load font information for OML+lmm on input line 267.
 (/home/analyst/.TinyTeX/texmf-dist/tex/latex/lm/omllmm.fd
 File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 161.
+LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 267.
 (/home/analyst/.TinyTeX/texmf-dist/tex/latex/lm/omslmsy.fd
 File: omslmsy.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 161.
+LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 267.
 (/home/analyst/.TinyTeX/texmf-dist/tex/latex/lm/omxlmex.fd
 File: omxlmex.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 161.
+(Font)              <10> on input line 267.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 161.
+(Font)              <7> on input line 267.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 161.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 161.
+(Font)              <5> on input line 267.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 267.
 (/home/analyst/.TinyTeX/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 161.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 267.
 (/home/analyst/.TinyTeX/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-) [1
-
-{/home/analyst/.TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/home/analyst/.TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}{/home/analyst/.TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}{/home/analyst/.TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}{/home/analyst/.TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}{/home/analyst/.TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}] [2] (./05-regression-output.aux)
+) [3{/home/analyst/.TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}{/home/analyst/.TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}{/home/analyst/.TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}] [4] [5] (./05-regression-output.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
@@ -449,18 +452,18 @@ Package rerunfilecheck Info: File `05-regression-output.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 11180 strings out of 476097
- 170484 string characters out of 5793521
+ 11188 strings out of 476097
+ 170557 string characters out of 5793521
  1946187 words of memory out of 5000000
- 33093 multiletter control sequences out of 15000+600000
- 585131 words of font info for 61 fonts, out of 8000000 for 9000
+ 33095 multiletter control sequences out of 15000+600000
+ 592397 words of font info for 63 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 75i,10n,79p,374b,444s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi10.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi7.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy7.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmtko10.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmtti10.pfb>
-Output written on 05-regression-output.pdf (2 pages, 138283 bytes).
+ 75i,10n,79p,374b,585s stack positions out of 10000i,1000n,20000p,200000b,200000s
+</home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmbxi10.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi10.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi7.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy7.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmtko10.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb></home/analyst/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmtti10.pfb>
+Output written on 05-regression-output.pdf (5 pages, 162206 bytes).
 PDF statistics:
- 81 PDF objects out of 1000 (max. 8388607)
- 54 compressed objects within 1 object stream
- 6 named destinations out of 1000 (max. 500000)
+ 101 PDF objects out of 1000 (max. 8388607)
+ 69 compressed objects within 1 object stream
+ 10 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

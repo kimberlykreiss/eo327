@@ -269,7 +269,7 @@ all_govt_hiring <- full_join(govt_monthly_hiring_aa_nj, govt_monthly_hiring_aa_c
 
 
 gg2_all_govt <- all_govt_hiring %>% 
-  #filter(START_DATE >= "2022-01-01") %>%
+  filter(START_DATE >= "2021-01-01") %>%
   pivot_longer(cols=c(hires_n_nj,hires_n_ct), names_to = 'hires') %>%
   ggplot(aes(x=START_DATE, y=value, group=hires, color=hires)) + 
   #  geom_point() + 
@@ -293,7 +293,7 @@ all_hiringSeasonAdj_df <- data.frame(year = seq(as.Date("2019-01-01"), as.Date("
 
 
 gg2_govt_sa <- all_hiringSeasonAdj_df %>% 
- # filter(year >= "2022-01-01") %>% 
+  filter(year >= "2021-01-01") %>% 
   pivot_longer(cols=c(aa_nj_season_adj_hires, aa_ct_season_adj_hires), names_to = 'hires') %>%
   ggplot(aes(x=year, y=value, group=hires, color=hires)) + 
   #  geom_point() + 
