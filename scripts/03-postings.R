@@ -3,6 +3,8 @@ library(scales)
 
 source("scripts/global-variables.R")
 
+unique_gfs <- readRDS("data/unique_gfs.rds")
+
 con <- DBI::dbConnect(
   odbc::odbc(),
   Driver = "SnowflakeDSIIDriver",
@@ -11,13 +13,15 @@ con <- DBI::dbConnect(
   Pwd = Sys.getenv('pwd')
 )
 
-nj_postings <- read_rds("data/nj_postings.rds") 
+#nj_postings <- read_rds("data/nj_postings.rds") 
+nj_postings <- read_rds("data/nj_postings_2024-07-16 06:28:50.rds")
 
+## AA or less: means the job either lists HS, Associate's, or no min educ required
 nj_postings_ <- nj_postings %>% 
   mutate(aa_or_less = if_else(MIN_EDULEVELS %in% c(0,1,99), "AA or Less", "BA+"), 
          POST_DATE= as.Date(floor_date(POSTED, unit="month"))) %>% 
- # filter((COMPANY_NAME %in% unique_gfs$COMPANY_NAME)) %>%
-  filter(POSTED < "2024-04-01")
+  filter((COMPANY_NAME %in% unique_gfs$COMPANY_NAME)) %>%
+  filter(POSTED < "2024-07-01")
 
 monthly_posts <- nj_postings_ %>% 
   group_by(POST_DATE) %>% 
@@ -52,12 +56,20 @@ gg_educ_posts <- monthly_posts_educ %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
         legend.position = "bottom", 
         legend.title = element_blank()) +
-  scale_color_manual(values=c("orange", "grey"), labels= c("Non-BA", "BA+")) + # , labels = c("BA+", "AA or less"))+
+  scale_color_manual(values=c("orange", "grey"), labels= c("  High School, Associate's, 
+  or No Minimum Education Listed", "At Least BA Required")) + # , labels = c("BA+", "AA or less"))+
   scale_y_continuous(labels=comma) + 
   scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
   geom_vline(xintercept = as.Date("2023-10-01"), color="red") +
-  geom_vline(xintercept = as.Date("2023-04-01"), color="navyblue")
+  geom_vline(xintercept = as.Date("2023-04-01"), color="navyblue") + 
+  labs(x="", y="", title = "Number of NJ Government Job Postings by Education Requirement", 
+       caption = "
+       Source: author's calculations using Lightcast data")
 gg_educ_posts
+
+
+
+
 
 
 ####################################
@@ -69,7 +81,7 @@ nj_postings_govt_aa <- nj_postings %>%
          POST_DATE= as.Date(floor_date(POSTED, unit="month"))) %>% 
    filter((COMPANY_NAME %in% unique_gfs$COMPANY_NAME)) %>%
   filter(aa_or_less == "AA or Less") %>%
-  filter(POSTED < "2024-04-01") %>% 
+  filter(POSTED < "2024-07-01") %>% 
   group_by(POST_DATE) %>% 
   summarise(n_govt_aa=n())
 
@@ -78,7 +90,7 @@ nj_postings_nongovt_aa <- nj_postings %>%
          POST_DATE= as.Date(floor_date(POSTED, unit="month"))) %>% 
   filter(!(COMPANY_NAME %in% unique_gfs$COMPANY_NAME)) %>%
   filter(aa_or_less == "AA or Less") %>%
-  filter(POSTED < "2024-04-01")%>% 
+  filter(POSTED < "2024-07-01")%>% 
   group_by(POST_DATE) %>% 
   summarise(n_nongovt_aa=n())
 

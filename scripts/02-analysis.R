@@ -76,14 +76,14 @@ opra_all4yr_jobs <-
 #   filter(COMPANY_IS_STAFFING == FALSE)
 
 ## filter down to just government jobs in NJ 
-# nj_postings <-
-#   query_table_sf(con, "EMSI_BURNING_GLASS_INSTITUTE", "US", "POSTINGS") %>%
-#   filter(POSTED >= as.Date("2019-01-01") & STATE == 34) %>%
-#   filter(COMPANY_IS_STAFFING == FALSE) %>%
-#   select(ID, POSTED, STATE, COMPANY_NAME, COMPANY_RAW, MIN_EDULEVELS, MAX_EDULEVELS)%>%
-#   collect() 
-# 
-# saveRDS(nj_postings, "data/nj_postings.rds")
+nj_postings <-
+  query_table_sf(con, "EMSI_BURNING_GLASS_INSTITUTE", "US", "POSTINGS") %>%
+  filter(POSTED >= as.Date("2021-01-01") & STATE == 34) %>%
+  filter(COMPANY_IS_STAFFING == FALSE) %>%
+  select(ID, POSTED, STATE, COMPANY_NAME, COMPANY_RAW, MIN_EDULEVELS, MAX_EDULEVELS)%>%
+  collect()
+
+saveRDS(nj_postings, paste0("data/nj_postings_", Sys.time(), ".rds"))
 
 nj_postings <- readRDS("data/nj_postings.rds")
 
